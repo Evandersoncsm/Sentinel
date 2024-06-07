@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Sentinel</title>
+<style>
+
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        color: white;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        background-image: url(https://i.imgur.com/qkvO5Wh.gif);
+        background-size: cover;
+    
+    }
+    header {
+        background-color: rgba(0, 0, 0, 0.493);
+        color: white;
+        padding: 25px;
+        padding-top: 0;
+        padding-bottom: 80px;
+        border-radius: 8px;
+        text-align: left;
+        font-size: 40px;
+        width: 1080px;
+        margin-left: 0px;
+        height: 100px;
+        
+        
+    }
+    form {
+        border-radius: 100%;
+        padding: 20px;
+        padding-left: 60px;
+        padding-right: 320px;
+        padding-top: 580px;
+        background-color: rgba(0, 0, 0, 0);
+        max-width: 800px;
+        margin-right: 0 auto;
+        margin-left: 120px;
+        padding-bottom: 100px;
+    }
+    #start-screen {
+        display: flex;
+        flex-direction: column;
+    
+    }
+    button {
+        padding: 25px 35px;
+        font-size: 24px;
+        background-color: #5fd6fa;
+        color: white;
+        border: 2px solid white;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #000000;
+    }
+    .loading {
+        display: none;
+        margin-top: 20px;
+        width: 50px;
+        height: 50px;
+        position: relative;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #333;
+        animation: spin 1s linear infinite;
+    }
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: calc(100% - 6px);
+        height: calc(100% - 6px);
+        border-radius: 50%;
+        background-color: #ccc;
+    }
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+</head>
+<body>
+    <header>
+        <h1>Space Sentinel</h1>  
+        <br><br><br><br><br><br><br>
+    </header>
+    <form>
+        <div id="start-screen">
+            <button type="button" onclick="startLoading()">ACESSAR</button>
+            <div class="loading" id="loading"></div>
+        </div>
+    </form>
+    <script>
+        function startLoading() {
+            document.getElementById("start-screen").style.display = "none";
+            document.getElementById("loading").style.display = "block";
+            setTimeout(function() {
+                window.location.href = "SentinelLoading.html"; // Substitua "SentinelLoading.html" pelo nome do seu arquivo de tela de jogo
+            }, 2000); // Tempo de espera antes de redirecionar (em milissegundos)
+ 
+        
+        }
+    </script>
+</body>
+</html>

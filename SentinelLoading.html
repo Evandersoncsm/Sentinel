@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Aguarde</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url(https://i.imgur.com/SrZGqCb.gif);
+            background-size: cover;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loading-text {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="loading-text">Aguarde...</div>
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Simulação de carregamento por 5 segundos
+        setTimeout(() => {
+            document.querySelector('.loading-text').textContent = 'Carregamento concluído!';
+            document.querySelector('.spinner').style.display = 'none';
+            
+            // Redireciona para a página do jogo
+            window.location.href = "Sentinel.Index.html";
+        }, 9000);
+    </script>
+</body>
+</html>

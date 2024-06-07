@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Codigo Base, html, css, javascript">
+  <meta name="keywords" content="Codigo Base, html, css, javascript">
+  <meta name="author" content="Johnny Peffer Oficial">
+  <title>Jogo Nave Espacial</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 900;
+      color: white;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    #cenario {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image: url(https://i.imgur.com/WgG9yC0.jpeg);
+      background-position: center;
+      background-repeat: repeat;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    #menu {
+      width: 90vw;
+      height: 10vh;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    #nave {
+      position: absolute;
+      width: 25vw;
+      height: 25vw;
+      background-image: url(https://i.imgur.com/gbsijc5.png);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      bottom: 0;
+    }
+
+    #controles {
+      position: absolute;
+      bottom: 10%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .botao-controle {
+      background-color: rgba(95, 214, 250, 0.5);
+      color: white;
+      border: 2px solid white;
+      border-radius: 50%;
+      padding: 15px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      transition: background-color 0.3s;
+    }
+
+    .botao-controle:active {
+      background-color: rgba(61, 165, 213, 0.5);
+    }
+
+    #iniciar {
+      position: absolute;
+      background-color: rgba(95, 214, 250, 0.5);
+      color: white;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 5px;
+      border: 2px solid white;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 1.5em;
+      transition: background-color 0.3s;
+    }
+
+    #iniciar:active {
+      background-color: rgba(61, 165, 213, 0.5);
+    }
+
+    .mensagem-erro {
+      color: red;
+      font-size: 1em;
+      margin-top: 10px;
+      display: none;
+    }
+
+    @keyframes animarCenario {
+      from {
+        background-position-y: 100%;
+      }
+      to {
+        background-position-y: 0%;
+      }
+    }
+
+    .input-nome {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      color: white;
+      font-size: 1em;
+    }
+
+    .naveinimigadestruida, .explosaonaveinimiga {
+      animation: explodir 1s steps(4) forwards;
+    }
+
+    @keyframes explodir {
+      from { transform: scale(1); }
+      to { transform: scale(0); }
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cenario">
+    <div id="menu">
+      <div id="jogador">Jogador: <input type="text" id="nomeJogador" class="input-nome" placeholder="Seu Nome"></div>
+      <div id="fase">Fase: 1</div>
+      <div id="vida">Vida: 100</div>
+      <div id="pontos">Pontos: 0</div>
+    </div>
+    <div id="nave"></div>
+    <div id="controles">
+      <div class="botao-controle" onclick="moverNave('up')">↑</div>
+      <div style="display: flex;">
+        <div class="botao-controle" onclick="moverNave('left')">←</div>
+        <div class="botao-controle" onclick="atirar()">●</div>
+        <div class="botao-controle" onclick="moverNave('right')">→</div>
+      </div>
+      <div class="botao-controle" onclick="moverNave('down')">↓</div>
+    </div>
+    <button type="button" id="iniciar" onclick="iniciarJogo()">Start</button>
+    <div id="mensagemErro" class="mensagem-erro">Por favor, insira seu nome para iniciar o jogo.</div>
+  </div>
+
+  <script>
+    const botaoIniciar = document.getElementById("iniciar");
+    const cenario = document.getElementById("cenario");
+    const nave = document.getElementById("nave");
+    const vida = document.getElementById("vida");
+    const pontos = document.getElementById("pontos");
+    const fase = document.getElementById("fase");
+    const nomeJogador = document.getElementById("nomeJogador");
+    const mensagemErro = document.getElementById("mensagemErro");
+    const audioJogo = new Audio("audios/missaoespaco.mp3");
+
+    const larguraCenario = cenario.offsetWidth;
+    const alturaCenario = cenario.offsetHeight;
+
+    const larguraNave = nave.offsetWidth;
+    const alturaCeNave = nave.offsetHeight;
+
+    const velocidadeNave = 20;
+    const velocidadeTiro = 20;
+    const velocidadeNaveInimigas = 5;
+
+    let estaAtirando = false;
+
+    let tiroAtual = 0;
+
+    let vidaAtual = 100;
+    let pontosAtual = 0;
+    let faseAtual = 1;
+
+    let checaMoveNaveInimigas;
+    let checaNaveInimigas;
+    let checaMoveTiros;
+    let checaMoveNave;
+    let checaColisao;
+    let checaTiros;
+
+    let posicaoHorizontal = larguraCenario / 2 - larguraNave / 2;
+    let posicaoVertical = alturaCenario - alturaCeNave;
+    let direcaoHorizontal = 0;
+    let direcaoVertical = 0;
+
+    const moverNave = (direcao) => {
+      if (direcao === 'right') {
+        direcaoHorizontal = 2;
+      } else if (direcao === 'left') {
+        direcaoHorizontal = -2;
+      } else if (direcao === 'down') {
+        direcaoVertical = 2;
+      } else if (direcao === 'up') {
+        direcaoVertical = -2;
+      }
+      posicaoHorizontal += direcaoHorizontal * velocidadeNave;
+      posicaoVertical += direcaoVertical * velocidadeNave;
+      if (posicaoHorizontal < 0) {
+        posicaoHorizontal = 0;
+      } else if (posicaoHorizontal + larguraNave > larguraCenario) {
+        posicaoHorizontal = larguraCenario - larguraNave;
+      }
+      if (posicaoVertical < 0) {
+        posicaoVertical = 0;
+      } else if (posicaoVertical + alturaCeNave > alturaCenario) {
+        posicaoVertical = alturaCenario - alturaCeNave;
+      }
+      nave.style.left = posicaoHorizontal + "px";
+      nave.style.top = posicaoVertical + "px";
+      direcaoHorizontal = 0;
+      direcaoVertical = 0;
+    }
+
+    const atirar = () => {
+      const delayTiro = Date.now();
+      const atrasoTiro = delayTiro - tiroAtual;
+
+      if (atrasoTiro >= 100) {
+        tiroAtual = Date.now();
+        criaTiros(posicaoHorizontal + larguraNave / 2 - 5, posicaoVertical - 10);
+      }
+    }
+
+    const criaTiros = (posicaoLeftTiro, posicaoTopTiro) => {
+      const tiro = document.createElement("div");
+      tiro.className = "tiro";
+      tiro.style.position = "absolute";
+      tiro.style.width = "10px";
+      tiro.style.height = "10px";
+      tiro.style.backgroundColor = "rgb(14, 219, 14)";
+      tiro.style.left = posicaoLeftTiro + "px";
+      tiro.style.top = posicaoTopTiro + "px";
+      cenario.appendChild(tiro);
+      audioTiros();
+    }
+
+    const audioTiros = () => {
+      const audioDoTiro = document.createElement("audio");
+      audioDoTiro.className = "audiotiro";
+      audioDoTiro.setAttribute("src", "audios/tiro.mp3");
+      audioDoTiro.play();
+      cenario.appendChild(audioDoTiro);
+      audioDoTiro.addEventListener("ended", () => {
+        audioDoTiro.remove();
+      })
+    }
+
+    const moveTiros = () => {
+      const tiros = document.querySelectorAll(".tiro");
+      for (let i = 0; i < tiros.length; i++) {
+        if (tiros[i]) {
+          let posicaoTopTiro = tiros[i].offsetTop;
+          posicaoTopTiro -= velocidadeTiro;
+          tiros[i].style.top = posicaoTopTiro + "px";
+          if (posicaoTopTiro < -10) {
+            tiros[i].remove();
+          }
+        }
+      }
+    }
+
+    const naveInimigas = () => {
+      const inimigo = document.createElement("div");
+      inimigo.className = "inimigo";
+      inimigo.style.position = "absolute";
+      inimigo.setAttribute("data-vida", 5);
+      inimigo.style.width = "15vw";
+      inimigo.style.height = "15vw";
+      inimigo.style.backgroundImage = "url(https://i.imgur.com/LUb0PZ6.png)"; //IMAGEM DO INIMIGO
+      inimigo.style.backgroundPosition = "center";
+      inimigo.style.backgroundRepeat = "no-repeat";
+      inimigo.style.backgroundSize = "contain";
+      inimigo.style.left = Math.floor(Math.random() * (larguraCenario - larguraNave)) + "px";
+      inimigo.style.top = "-15vw";
+      cenario.appendChild(inimigo);
+    }
+
+    const moveNaveInimigas = () => {
+      const navaInimigas = document.querySelectorAll(".inimigo");
+      for (let i = 0; i < navaInimigas.length; i++) {
+        if (navaInimigas[i]) {
+          let posicaoTopNaveInimiga = navaInimigas[i].offsetTop;
+          let posicaoLeftNaveInimiga = navaInimigas[i].offsetLeft;
+          posicaoTopNaveInimiga += velocidadeNaveInimigas;
+          navaInimigas[i].style.top = posicaoTopNaveInimiga + "px";
+          if (posicaoTopNaveInimiga > alturaCenario) {
+            vidaAtual -= 5;
+            vida.textContent = `Vida: ${vidaAtual}`;
+            explosaoNaveInimigaDestruida(posicaoLeftNaveInimiga);
+            if (vidaAtual <= 0) {
+              gameOver();
+            }
+            navaInimigas[i].remove();
+          }
+        }
+      }
+    }
+
+    const colisao = () => {
+      const todasNavesInimigas = document.querySelectorAll(".inimigo");
+      const todosTiros = document.querySelectorAll(".tiro");
+      todasNavesInimigas.forEach((naveInimiga) => {
+        todosTiros.forEach((tiro) => {
+          const colisaoNaveInimiga = naveInimiga.getBoundingClientRect();
+          const colisaoTiro = tiro.getBoundingClientRect();
+          const posicaoNaveInimigaLeft = naveInimiga.offsetLeft;
+          const posicaoNaveInimigaTop = naveInimiga.offsetTop;
+          let vidaAtualNaveInimiga = parseInt(naveInimiga.getAttribute("data-vida"));
+          if (
+            colisaoNaveInimiga.left < colisaoTiro.right &&
+            colisaoNaveInimiga.right > colisaoTiro.left &&
+            colisaoNaveInimiga.top < colisaoTiro.bottom &&
+            colisaoNaveInimiga.bottom > colisaoTiro.top
+          ) {
+            vidaAtualNaveInimiga--;
+            tiro.remove();
+            if (vidaAtualNaveInimiga === 0) {
+              pontosAtual += 10;
+              pontos.textContent = `Pontos: ${pontosAtual}`;
+              naveInimiga.remove();
+              naveInimigaDestruida(posicaoNaveInimigaLeft, posicaoNaveInimigaTop);
+              if (pontosAtual % 50 === 0) {
+                faseAtual++;
+                fase.textContent = `Fase: ${faseAtual}`;
+              }
+            } else {
+              naveInimiga.setAttribute("data-vida", vidaAtualNaveInimiga);
+            }
+          }
+        })
+      })
+    }
+
+    const naveInimigaDestruida = (posicaoLeftNaveInimiga, posicaoTopNaveInimiga) => {
+      const naveInimigaDestruida = document.createElement("div");
+      naveInimigaDestruida.className = "naveinimigadestruida";
+      naveInimigaDestruida.style.position = "absolute";
+      naveInimigaDestruida.style.width = "15vw";
+      naveInimigaDestruida.style.height = "15vw";
+      naveInimigaDestruida.style.backgroundImage = "url(https://i.imgur.com/tVodLIf.gif)";
+      naveInimigaDestruida.style.backgroundPosition = "center";
+      naveInimigaDestruida.style.backgroundRepeat = "no-repeat";
+      naveInimigaDestruida.style.backgroundSize = "contain";
+      naveInimigaDestruida.style.left = posicaoLeftNaveInimiga + "px";
+      naveInimigaDestruida.style.top = posicaoTopNaveInimiga + "px";
+      cenario.appendChild(naveInimigaDestruida);
+      audioExplosoes();
+      setTimeout(() => { cenario.removeChild(naveInimigaDestruida); }, 1000);
+    }
+
+    const explosaoNaveInimigaDestruida = (posicaoLeftNaveInimiga) => {
+      const explosaoNaveInimiga = document.createElement("div");
+      explosaoNaveInimiga.className = "explosaonaveinimiga";
+      explosaoNaveInimiga.style.position = "absolute";
+      explosaoNaveInimiga.style.width = "15vw";
+      explosaoNaveInimiga.style.height = "15vw";
+      explosaoNaveInimiga.style.backgroundImage = "url(https://i.imgur.com/Kk67r5X.gif)";
+      explosaoNaveInimiga.style.backgroundPosition = "center";
+      explosaoNaveInimiga.style.backgroundRepeat = "no-repeat";
+      explosaoNaveInimiga.style.backgroundSize = "contain";
+      explosaoNaveInimiga.style.left = posicaoLeftNaveInimiga + "px";
+      explosaoNaveInimiga.style.top = (alturaCenario - 15) + "vw";
+      cenario.appendChild(explosaoNaveInimiga);
+      audioExplosoes();
+      setTimeout(() => { cenario.removeChild(explosaoNaveInimiga); }, 1000);
+    }
+
+    const audioExplosoes = () => {
+      const audioExplosaoNaveInimiga = document.createElement("audio");
+      audioExplosaoNaveInimiga.className = "audioexplosoes";
+      audioExplosaoNaveInimiga.setAttribute("src", "audios/destruido.mp3");
+      audioExplosaoNaveInimiga.play();
+      cenario.appendChild(audioExplosaoNaveInimiga);
+      audioExplosaoNaveInimiga.addEventListener("ended", () => {
+        audioExplosaoNaveInimiga.remove();
+      })
+    }
+
+    const gameOver = () => {
+      document.removeEventListener("keydown", teclaPressionada);
+      document.removeEventListener("keyup", teclaSolta);
+      clearInterval(checaMoveNaveInimigas);
+      clearInterval(checaNaveInimigas);
+      clearInterval(checaMoveTiros);
+      clearInterval(checaMoveNave);
+      clearInterval(checaColisao);
+      const overlay = document.createElement("div");
+      overlay.className = "overlay";
+      overlay.innerHTML = "Game Over";
+      cenario.appendChild(overlay);
+      cenario.removeChild(nave);
+      cenario.style.animation = "none";
+      const navesInimigas = document.querySelectorAll(".inimigo");
+      navesInimigas.forEach((inimigos) => {
+        inimigos.remove();
+      });
+      const todosTiros = document.querySelectorAll(".tiro");
+      todosTiros.forEach((tiro) => {
+        cenario.removeChild(tiro);
+      });
+    }
+
+    const iniciarJogo = () => {
+      if (nomeJogador.value.trim() === "") {
+        mensagemErro.style.display = "block";
+        return;
+      }
+      mensagemErro.style.display = "none";
+      document.addEventListener("keydown", teclaPressionada);
+      document.addEventListener("keyup", teclaSolta);
+      checaMoveNave = setInterval(() => moverNave(""), 50);
+      checaMoveTiros = setInterval(moveTiros, 50);
+      checaMoveNaveInimigas = setInterval(moveNaveInimigas, 50);
+      checaColisao = setInterval(colisao, 10);
+      checaNaveInimigas = setInterval(naveInimigas, 1000);
+      botaoIniciar.style.display = "none";
+      cenario.style.animation = "animarCenario 10s infinite linear";
+      audioJogo.loop = true;
+      audioJogo.play();
+    }
+
+    const teclaPressionada = (event) => {
+      if (event.key === "ArrowUp") {
+        moverNave('up');
+      } else if (event.key === "ArrowDown") {
+        moverNave('down');
+      } else if (event.key === "ArrowLeft") {
+        moverNave('left');
+      } else if (event.key === "ArrowRight") {
+        moverNave('right');
+      } else if (event.key === " ") {
+        atirar();
+      }
+    }
+
+    const teclaSolta = () => {
+      direcaoHorizontal = 0;
+      direcaoVertical = 0;
+    }
+  </script>
+</body>
+
+</html>
